@@ -1,0 +1,80 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.CourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.zyb.entity.Course" >
+        <id column="course_id" property="courseId" jdbcType="INTEGER" />
+        <result column="course_name" property="courseName" jdbcType="VARCHAR" />
+    </resultMap>
+    <!--查询操作-->
+    <!--===============================查询==================================================================================================-->
+    <!--查询所有课程信息-->
+    <select id="getCourses" resultMap="BaseResultMap" >
+    select  course_id, course_name from course order by course_name
+  </select>
+
+    <!--根据课程号查询课程信息-->
+    <select id="getCourseById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+     select course_id, course_name  from course where course_id = #{courseId}
+  </select>
+
+    <select id="getCoursesByClassId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select c.* from course c ,course_record cr where cr.course_id = c.course_id and cr.class_id = #{classId}
+    </select>
+
+    <!--模糊查询课程-->
+    <select id="getLikeCourses" parameterType="com.zyb.entity.Course" resultMap="BaseResultMap" >
+        select  course_id,    course_name  from course
+        <where>
+            <if test="courseName != null">
+                and course_name like concat('%',#{courseName},'%')
+            </if>
+        </where>
+        order by course_id
+    </select>
+
+    <!--查询课程名对应的课程是否存在-->
+    <select id="countByCourseName" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from course where course_Name = #{courseName}
+  </select>
+    <!--查询班级未选择的课程-->
+    <select id="getCoursesWithOutChoosed" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select c.* from course c where course_id not in (select cr.course_id from course_record cr where class_id = #{classId})
+    </select>
+    <!--===============================更新==================================================================================================-->
+    <update id="updateByPrimaryKeySelective" parameterType="com.zyb.entity.Course" >
+        update course
+        <set>
+            <if test="courseName != null" >
+                course_name = #{courseName,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where course_id = #{courseId,jdbcType=INTEGER}
+    </update>
+    
+    <!--===============================添加==================================================================================================-->
+    <!--添加课程-->
+    <insert id="addCourse" parameterType="com.zyb.entity.Course" >
+    insert into Course (   course_name )
+    values ( #{courseName})
+  </insert>
+    <!--===============================删除=================================================================================================-->
+    <!--根据课程id删除课程-->
+    <delete id="deleteCourseById" parameterType="java.lang.Integer" >
+    delete from course  where course_id = #{courseId,jdbcType=INTEGER};
+  </delete>
+
+
+    <!--批量删除课程-->
+    <delete id="deleteBatchByCourseIds" parameterType="list">
+        delete from course
+        <where>
+            <if test="list!=null and list.size>0">
+                <foreach collection="list" open="course_id in (" close=");" item="courseId" separator=",">
+                    #{courseId}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+</mapper>

@@ -1,0 +1,30 @@
+body{
+	background:black;
+	height:800px;
+}
+#chooselogin{
+	position:absolute;
+	left:450px;
+	top:400px;
+	background:rgba(255,255,250.0.8);
+	text-align:center;
+	z-index:600;
+}
+#chooselogin button{
+	margin-left:100px;
+	width:150px;
+	height:50px;
+}
+#carousel-example-generic{
+	position:absolute;
+	left:0;
+	top:0;
+	width:100%;
+	height:100%;
+	z-index:-2;
+}
+.carousel-inner img{
+	opacity:0.3;
+	width:100%;
+	height:800px;
+}

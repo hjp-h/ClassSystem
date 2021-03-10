@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--类中属性一般采用驼峰命名法-->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--打印查询语句-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+
+    </settings>
+
+    <!--类设置别名-->
+    <typeAliases>
+        <package name="com.zyb.entity"/>
+    </typeAliases>
+
+    <plugins>
+        <!--分页拦截器-->
+    <plugin interceptor="com.github.pagehelper.PageInterceptor">
+        <!--分页参数合理化
+            true: 如果pageNum<1 会查询第一页 ，>最大页数会查询最后一页
+            false:<1或 >最大页数会返回空数据
+        -->
+        <property name="reasonable" value="true"/>
+    </plugin>
+
+</plugins>
+
+</configuration>

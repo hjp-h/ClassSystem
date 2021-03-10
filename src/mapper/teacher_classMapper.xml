@@ -1,0 +1,38 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.Teacher_classMapper">
+
+    <select id="add">
+        insert into teacher_class(t_id, class_id) value (#{tId},#{classId})
+    </select>
+
+
+
+    <delete id="delete">
+        delete from teacher_class where t_id = #{tId}
+    </delete>
+
+    <delete id="deleteByClassId">
+        delete from teacher_class where class_id = #{classId}
+    </delete>
+
+    <delete id="deleteBatchByClassIds">
+        delete from teacher_class where class_id in
+        <foreach collection="list" open="(" close=")" separator="," item="classId">
+            #{classId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteBatch">
+        delete from teacher_class where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </delete>
+
+    <select id="getClassIdByTId" resultType="Integer">
+        select class_id from teacher_class where t_id = #{tId}
+    </select>
+
+</mapper>

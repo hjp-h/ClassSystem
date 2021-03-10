@@ -1,0 +1,112 @@
+.form-group a:hover{
+	text-decoration: none;
+	cursor:pointer;
+	color:white;
+}
+.form-group a{
+	display:none;
+	font-size:13px;
+	text-align:center;
+}
+.bgCover{
+	background-color:rgba(0,0,0,0.6);
+	transition:opacity .2s;
+	display:inline-block;
+	width:90px;
+	height:90px;
+	line-height:90px;
+	position:absolute;
+	top:0px;
+	left:0px;
+	border-radius: 50%;
+}
+.img_container{
+	background-color:transparent;
+	width:100px;
+	height:100px;
+	position:absolute;
+	top:100px;
+	left:20px;
+}
+.personal-img{
+	width: 90px;
+	border: 2px solid white;
+}
+.p-sign{
+	position:absolute;
+	left:140px;
+	top:150px;
+}
+.img_span{
+	font-size: 18px;
+	color:white;
+	width: 90px;
+	position:absolute;
+	top:20px;
+	left:100px;
+}
+.media_container{
+	overflow:auto;
+	height:500px;
+	width:500px;
+}
+.m1{
+	margin-top:30px;
+	padding-left:30px;
+	position:relative;
+}
+.m2{
+	height:64px;
+}
+.m3{
+	position:relative;
+	margin-bottom:20px;
+	padding-left:30px;
+}
+.time-text{
+	float:right;
+	font-size:10px;
+	position:absolute;
+	right:0px;
+	bottom:0px;
+}
+.time-text1{
+	float:right;
+	font-size:10px;
+	position:absolute;
+	right:0px;
+	bottom:0px;
+}
+/*引入字体图标*/
+@font-face {
+    font-family:icomoon;
+    src: url('../../c_fonts/icomoon.eot') format('embedded-opentype'),
+    url('../../c_fonts/icomoon.svg') format('svg'),
+    url('../../c_fonts/icomoon.ttf') format('truetype'),
+    url('../../c_fonts/icomoon.woff') format('woff');
+}
+/*css以icon-开头或者以icon-*/
+[class^="icon-"],
+[class*=" icon-"]{
+    font-family:icomoon;
+    font-style: normal;
+}
+.icon-add::before{
+    content: '\e9e2';
+    font-size: 13px;
+    float:right;
+}
+.manage-container{
+	width:659px;
+}
+.item_photo{
+	width:195px;
+	height:200px;
+	margin:10px;
+}
+.manage-container .content{
+	float:left;
+}
+.mCS_1 .mCSB_scrollTools .mCSB_dragger_bar{ 
+	width: 8px; 
+}

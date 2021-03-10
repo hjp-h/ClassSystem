@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zyb.dao.ClassMapper" >
+
+
+  <resultMap id="BaseResultMap" type="com.zyb.entity.Class" >
+    <id column="class_id" property="classId" jdbcType="INTEGER" />
+    <result column="class_no" property="classNo" jdbcType="INTEGER"/>
+    <result column="class_name" property="className" jdbcType="VARCHAR" />
+    <result column="stu_nums" property="stuNums" jdbcType="INTEGER"/>
+    <result column="graduated" property="graduated" jdbcType="VARCHAR"/>
+  </resultMap>
+<!--查询操作-->
+  <!--===============================查询==================================================================================================-->
+  <!--查询所有班级信息-->
+  <select id="getClasses" resultMap="BaseResultMap" >
+    select  class_id, class_no, class_name, stu_nums ,graduated from class order by class_No
+  </select>
+
+  <!--查询所有毕业班级信息-->
+  <select id="getClassesGraduated" resultMap="BaseResultMap" >
+    select  class_id, class_no, class_name, stu_nums ,graduated from class  where graduated = 'Y'order by class_No
+  </select>
+
+  <!--查询所有在读班级信息-->
+  <select id="getClassesWithOutGraduated" resultMap="BaseResultMap" >
+    select  class_id, class_no, class_name, stu_nums ,graduated from class  where graduated = 'N' order by class_No
+  </select>
+
+  <!--根据班级号查询班级信息-->
+  <select id="getClassById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+     select class_id, class_no, class_name, stu_nums ,graduated from class where class_id = #{classId}
+  </select>
+
+    <!--查询班级号对应的班级是否存在-->
+<select id="countByClassNo" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from class where class_No = #{classNo}
+  </select>
+
+  <!--查询班级名对应的班级是否存在-->
+  <select id="countByClassName" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from class where class_Name = #{className}
+  </select>
+  <!--查询课程对应的没有任课老师的班级-->
+  <select id="getClassesByCourseIdWithOutTeached" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select c.* from class c,course_record cr
+    where cr.class_id = c.class_id and  isnull(cr.t_id)  and cr.course_id = #{courseId}
+  </select>
+
+  <!--查询课程对应的没有任课老师或者任课老师号为传入的tid的班级-->
+  <select id="getClassesByCourseIdWithOutTeachedOrTId" parameterType="com.zyb.entity.Teacher" resultMap="BaseResultMap">
+    select c.* from class c,course_record cr
+    where cr.class_id = c.class_id and ( isnull(cr.t_id) or cr.t_id = #{tId}) and cr.course_id = #{course.courseId}
+  </select>
+
+  <select id="getClassesByTId" parameterType="Integer" resultMap="BaseResultMap">
+    select c.* from class c ,course_record cr
+    where cr.class_id = c.class_id and cr.t_id = #{tId}
+  </select>
+
+  <!--获取没有班主任管理的班级-->
+  <select id="getClassesWithOutMainTeacher" resultMap="BaseResultMap">
+    select * from class  where class_id not in (select class_id from teacher_class)
+  </select>
+
+  <!--获取班主任管理的班级-->
+  <select id="getClassByMainTId" resultMap="BaseResultMap">
+    select * from class where class_id in (select class_id from teacher_class where t_id = #{tId})
+  </select>
+
+  <!--模糊查询班级信息-->
+  <select id="likeQueryClasses" parameterType="com.zyb.entity.Class" resultMap="BaseResultMap" >
+    select  c.* from class c
+    <where>
+      <if test="classNo != null">
+        and class_no like concat('%',#{classNo},'%')
+      </if>
+      <if test="className != null">
+        and class_name like concat('%',#{className},'%')
+      </if>
+    </where>
+    order by class_No
+  </select>
+  <!--模糊查询教师授课班级信息-->
+  <select id="likeQueryClassesByTId" parameterType="com.zyb.entity.Class" resultMap="BaseResultMap" >
+    select  c.* from class c,course_record cr
+    <where>
+      <if test="clazz.classNo != null">
+        and class_no like concat('%',#{clazz.classNo},'%')
+      </if>
+      <if test="clazz.className != null">
+        and class_name like concat('%',#{clazz.className},'%')
+      </if>
+    </where>
+    and c.class_id = cr.class_id and cr.t_id = #{tId}
+    order by class_No
+  </select>
+
+  <!--模糊查询毕业班级信息-->
+  <select id="likeQueryClassesGraduated" parameterType="com.zyb.entity.Class" resultMap="BaseResultMap" >
+    select  c.* from class c,course_record cr
+    <where>
+      <if test="classNo != null">
+        and class_no like concat('%',#{classNo},'%')
+      </if>
+      <if test="className != null">
+        and class_name like concat('%',#{className},'%')
+      </if>
+    </where>
+    and  c.class_id = cr.class_id and graduated = 'Y'
+    order by class_No
+  </select>
+
+  <!--模糊查询在读班级信息-->
+  <select id="likeQueryClassesWithOutGraduated" parameterType="com.zyb.entity.Class" resultMap="BaseResultMap" >
+    select  c.* from class c,course_record cr
+    <where>
+      <if test="classNo != null">
+        and class_no like concat('%',#{classNo},'%')
+      </if>
+      <if test="className != null">
+        and class_name like concat('%',#{className},'%')
+      </if>
+    </where>
+    and  c.class_id = cr.class_id and graduated = 'N'
+    order by class_No
+  </select>
+
+
+
+
+  <!--===============================更新==================================================================================================-->
+  <update id="updateByPrimaryKeySelective" parameterType="com.zyb.entity.Class" >
+    update class
+    <set>
+      <if test="classNo != null" >
+        class_no = #{classNo,jdbcType=VARCHAR},
+      </if>
+      <if test="className != null" >
+        class_name = #{className,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where class_id = #{classId,jdbcType=INTEGER}
+  </update>
+  <!--班级增加一个学生-->
+  <update id="updateClassAddOneStu" parameterType="java.lang.Integer">
+    update class set stu_nums = stu_nums + 1 where class_id = #{classId}
+  </update>
+
+  <!--班级减少一个学生-->
+  <update id="updateClassDeleteOneStu" parameterType="java.lang.Integer">
+    update class set stu_nums = stu_nums - 1 where class_id = #{classId}
+  </update>
+
+  <!--使单个班级毕业-->
+  <update id="updateClassGraduatedByClassId" parameterType="java.lang.Integer">
+    update class set graduated = 'Y' where class_id = #{classId}
+  </update>
+  <!--使多个班级毕业-->
+  <update id="updateClassesGraduatedByClassIds" parameterType="list">
+    update class set graduated ='Y' where class_id in
+    <foreach collection="list" open="(" close=")" separator="," item="classId">
+      #{classId}
+    </foreach>
+  </update>
+
+
+  <!--===============================添加==================================================================================================-->
+  <!--添加班级-->
+  <insert id="addClass" parameterType="com.zyb.entity.Class" >
+    insert into Class (class_no, class_name, stu_nums,graudated)
+    values (#{classNo}, #{className}, 0,'N')
+  </insert>
+  <!--===============================删除=================================================================================================-->
+  <!--根据班级id删除班级-->
+  <delete id="deleteClassById" parameterType="java.lang.Integer" >
+    delete from class  where class_id = #{classId,jdbcType=INTEGER};
+  </delete>
+
+
+  <!--批量删除班级-->
+  <delete id="deleteBatchByClassNos" parameterType="list">
+    delete from class
+    <where>
+      <if test="list!=null and list.size>0">
+        <foreach collection="list" open="class_no in (" close=");" item="classNo" separator=",">
+          #{classNo}
+        </foreach>
+      </if>
+    </where>
+  </delete>
+
+  <!--批量删除班级-->
+  <delete id="deleteBatchByClassIds" parameterType="list">
+    delete from class
+    <where>
+      <if test="list!=null and list.size>0">
+        <foreach collection="list" open="class_id in (" close=");" item="classId" separator=",">
+          #{classId}
+        </foreach>
+      </if>
+    </where>
+  </delete>
+
+
+</mapper>

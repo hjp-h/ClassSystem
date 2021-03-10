@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+      <bean id="adminRealm" class="com.zyb.shiro.AdminRealm">
+          <property name="credentialsMatcher">
+              <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                  <property name="hashAlgorithmName" value="md5"/>
+                  <property name="hashIterations" value="1024"/>
+                  <!--hex加密，否则是base64-encoded-->
+                  <property name="storedCredentialsHexEncoded" value="true"/>
+              </bean>
+          </property>
+      </bean>
+      <bean id="teacherRealm" class="com.zyb.shiro.TeacherRealm">
+          <property name="credentialsMatcher">
+              <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                  <property name="hashAlgorithmName" value="md5"/>
+                  <property name="hashIterations" value="1024"/>
+                  <!--hex加密，否则是base64-encoded-->
+                  <property name="storedCredentialsHexEncoded" value="true"/>
+              </bean>
+          </property>
+      </bean>
+      <bean id="studentRealm" class="com.zyb.shiro.StudentRealm">
+          <property name="credentialsMatcher">
+              <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                  <property name="hashAlgorithmName" value="md5"/>
+                  <property name="hashIterations" value="1024"/>
+                  <property name="storedCredentialsHexEncoded" value="true"/>
+              </bean>
+          </property>
+      </bean>
+
+      <!--配置安全管理器-->
+       <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+           <property name="authenticator" ref="authenticator"/>
+           <property name="authorizer" ref="authorizer"/>
+            <property name="realms">
+                <list>
+                    <ref bean="adminRealm"/>
+                    <ref bean="teacherRealm"/>
+                    <ref bean="studentRealm"/>
+                </list>
+            </property>
+       </bean>
+
+        <bean id="authenticator" class="com.zyb.shiro.CustomizedModularRealmAuthenticator">
+            <!-- 配置认证策略，只要有一个Realm认证成功即可，并且返回所有认证成功信息 -->
+            <property name="authenticationStrategy">
+                <bean class="org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy"></bean>
+            </property>
+        </bean>
+
+        <bean id="authorizer" class="com.zyb.shiro.CustomizedModularRealmAuthorizer">
+
+        </bean>
+
+
+
+        <!-- Shiro过滤器 核心-->
+        <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- Shiro的核心安全接口,这个属性是必须的 -->
+            <property name="securityManager" ref="securityManager"/>
+            <!-- 身份认证失败，则跳转到登录页面的配置 -->
+            <property name="loginUrl" value="/index.jsp"/>
+            <!--&lt;!&ndash; 权限认证失败，则跳转到指定页面 &ndash;&gt;-->
+            <!--<property name="unauthorizedUrl" value="/nopower.jsp"/>-->
+            <!-- Shiro连接约束配置,即过滤链的定义 -->
+            <property name="filterChainDefinitions">
+                <value>
+                    <!--静态资源-->
+                    /static/css/** = anon
+                    /static/js/** = anon
+                    /static/bootstrap-3.3.7-dist/** = anon
+                    <!--首页-->
+                    /=anon
+                    /index.jsp=anon
+                    <!--管理员权限-->
+                    /adminLoginCheck = anon
+                    <!--/*Admin* = roles[admin,super_admin,teacher,main_teacher]-->
+                    <!--/*admin* = roles[admin,super_admin,teacher,main_teacher]-->
+                    /teacherLoginCheck = anon
+
+                </value>
+            </property>
+        </bean>
+        <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+        <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+        <!-- 开启Shiro注解 -->
+        <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+              depends-on= "lifecycleBeanPostProcessor"/>
+        <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+            <property name="securityManager" ref="securityManager"/>
+        </bean>
+
+</beans>

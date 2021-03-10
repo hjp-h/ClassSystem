@@ -1,0 +1,128 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.Photo_wallMapper">
+    <resultMap id="baseResultMap" type="com.zyb.entity.PhotoWall">
+        <id column="pw_id" property="pwId" jdbcType="INTEGER"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="upload_date" property="uploadDate"/>
+        <result column="image" property="image" jdbcType="VARCHAR"/>
+        <result column="checked" property="checked" jdbcType="VARCHAR"/>
+        <result column="showed" property="showed" jdbcType="VARCHAR"/>
+        <association property="student" javaType="com.zyb.entity.Student">
+            <id column="stu_id" property="stuId" javaType="INTEGER"/>
+            <result column="stu_no" property="stuNo" jdbcType="VARCHAR"/>
+            <result column="stu_name" property="stuName" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+
+    <!--学生上传照片-->
+    <insert id="addPhoto" parameterType="com.zyb.entity.PhotoWall" useGeneratedKeys="true" keyProperty="pwId">
+        insert into photo_wall(title,upload_date,stu_id,showed) values(#{title},now(),#{student.stuId},'N')
+    </insert>
+    <!--查询所有已经审核通过的照片-->
+    <select id="queryPhotosCheckPass" resultMap="baseResultMap">
+        select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and checked = 'Y' order by pw.upload_date asc
+    </select>
+    <!--查询班级所有已经审核通过的照片-->
+    <select id="queryPhotosCheckPassByClassId" parameterType="Integer" resultMap="baseResultMap">
+        select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name,s.class_id
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and s.class_id = #{classId} and checked = 'Y'  order by pw.upload_date asc
+    </select>
+     <!--查询学生所有已经审核通过的照片-->
+    <select id="queryPhotosCheckPassByStuId" parameterType="Integer" resultMap="baseResultMap">
+        select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and s.stu_id = #{stuId} and checked = 'Y'  order by pw.upload_date asc
+    </select>
+    <!--查询班级所有没有审核的照片-->
+    <select id="queryPhotosWithOutCheckByClassId" parameterType="Integer" resultMap="baseResultMap">
+         select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and s.class_id = #{classId} and checked is null  order by pw.upload_date asc
+    </select>
+    <!--查询班级所有没有审核的照片数-->
+    <select id="countPhotosWithOutCheckByClassId" parameterType="Integer" resultType="Integer">
+         select count(*)
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and s.class_id = #{classId} and checked is null  order by pw.upload_date asc
+    </select>
+    <!--查询学生已经被审核的未展示照片-->
+    <select id="queryPhotosCheckedAndNotShowedByStuId" parameterType="Integer" resultMap="baseResultMap">
+        select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and pw.showed = 'N' and s.stu_id = #{stuId} and checked is not null order by pw.upload_date asc
+    </select>
+    <!--查询学生已经被审核的未展示照片数-->
+    <select id="countPhotosCheckedAndNotShowedByStuId" parameterType="Integer" resultType="Integer">
+        select count(*)
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and pw.showed = 'N' and s.stu_id = #{stuId} and checked is not null  order by pw.upload_date asc
+    </select>
+    <!--查询学生被审核不通过的展示过的照片-->
+    <select id="queryPhotoCheckNotPassAndShowedByStuId" parameterType="Integer" resultMap="baseResultMap">
+        select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and pw.showed = 'Y' and s.stu_id = #{stuId} and checked = 'N'  order by pw.upload_date asc
+    </select>
+    <!--根据上传照片id查询照片-->
+    <select id="queryPhotoByPwId" parameterType="Integer" resultMap="baseResultMap">
+         select pw.pw_id,pw.title,pw.upload_date,pw.image,pw.checked,pw.showed, s.stu_id,s.stu_no,s.stu_name
+        from photo_wall pw,student s where pw.stu_id = s.stu_id and pw.pw_id = #{pwId}  order by pw.upload_date asc
+    </select>
+   <!--更新照片-->
+   <update id="updatePhotoById" parameterType="com.zyb.entity.PhotoWall">
+       update photo_wall
+       <set>
+           <if test="title!=null">
+               title = #{title},
+           </if>
+           <if test="uploadDate!=null">
+               upload_date = #{uploadDate},
+           </if>
+           <if test="image!=null">
+               image = #{image},
+           </if>
+           <if test="checked!=null">
+               checked = #{checked},
+           </if>
+           <if test="showed!=null">
+               showed = #{showed},
+           </if>
+       </set>
+       where pw_id = #{pwId}
+   </update>
+    <!--更新照片审核通过-->
+    <update id="updatePhotoCheckPassByPwId" parameterType="Integer">
+        update photo_wall set checked = 'Y' where pw_id = #{pwId}
+    </update>
+    <!--更新照片审核未通过-->
+    <update id="updatePhotoCheckNotPassByPwId" parameterType="Integer">
+        update photo_wall set checked = 'N' where pw_id = #{pwId}
+    </update>
+    <!--更新照片展示过-->
+    <update id="updatePhotoShowedByPwId" parameterType="Integer">
+        update photo_wall set showed = 'Y' where pw_id = #{pwId}
+    </update>
+    <!--更新多个照片展示过-->
+    <update id="updatePhotoShowedByPwIds" parameterType="list">
+        update photo_wall set showed = 'Y' where pw_id in
+        <foreach collection="list" open="(" close=")" separator="," item="pwId">
+            #{pwId}
+        </foreach>
+    </update>
+    <!--删除单个照片-->
+    <delete id="deletePhotoByPwId" parameterType="Integer">
+        delete from photo_wall where pw_id = #{pwId}
+    </delete>
+    <!--删除多个照片-->
+    <delete id="deletePhotosByPwIds" parameterType="list">
+        delete from photo_wall where pw_id in
+        <foreach collection="list" open="(" close=")" separator="," item="pwId">
+            #{pwId}
+        </foreach>
+    </delete>
+    <!--删除学生的审核不通过且展示过的照片-->
+    <delete id="deletePhotosCheckNotPassAndShowedByStuId">
+        delete from photo_wall where stu_id = #{stuId} and checked = 'N' and showed = 'Y'
+    </delete>
+
+
+
+
+</mapper>

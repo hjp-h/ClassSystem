@@ -1,0 +1,42 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.Course_recordMapper">
+
+
+
+    <update id="updateCourseRecord">
+        update course_record set t_id = #{teacher.tId} where course_id = #{teacher.course.courseId} and class_id = #{classId}
+    </update>
+
+    <update id="updateCourseRecordBatch">
+        update course_record set t_id = #{teacher.tId} where course_id = #{teacher.course.courseId} and class_id in
+        <foreach collection="classIds" open="(" close=")" separator="," item="classId">
+            #{classId}
+        </foreach>
+    </update>
+    <!--将该老师的授课班级都置为无人授课-->
+    <update id="updateWithOutTeachedByTId" parameterType="Integer">
+        update course_record set t_id = null where t_id = #{tId}
+    </update>
+    <!--将多个老师的授课班级都置为无人授课-->
+    <update id="updateWithOutTeachedByTIds">
+        update course_record set t_id = null where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </update>
+
+    <delete id="deleteCourseRecordByTId" parameterType="Integer">
+        delete from course_record where t_id  = #{tId}
+    </delete>
+
+    <delete id="deleteCourseRecordBatch" parameterType="list">
+        delete from course_record where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </delete>
+
+
+</mapper>

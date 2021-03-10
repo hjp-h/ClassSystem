@@ -1,0 +1,121 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.ProclamationMapper">
+
+        <resultMap id="BaseResultMap" type="com.zyb.entity.Proclamation">
+            <id column="p_id" property="pId" jdbcType="INTEGER"/>
+            <result column="title" property="title" jdbcType="VARCHAR"/>
+            <result column="content" property="content" jdbcType="VARCHAR"/>
+            <result column="create_date" property="createDate" jdbcType="VARCHAR"/>
+            <result column="deadline" property="deadline" jdbcType="VARCHAR"/>
+            <association property="clazz" javaType="com.zyb.entity.Class">
+                <id column="class_id" property="classId" jdbcType="INTEGER"/>
+                <result column="class_name" property="className"/>
+                <result column="stu_nums" property="stuNums"/>
+            </association>
+            <association property="student" javaType="com.zyb.entity.Student">
+                <id column="stu_id" property="stuId" jdbcType="INTEGER" />
+                <result column="stu_name" property="stuName" jdbcType="VARCHAR" />
+            </association>
+        </resultMap>
+
+
+        <!--插入公告-->
+        <insert id="addProclamation" parameterType="com.zyb.entity.Proclamation">
+            insert into proclamation(title, content, class_id, stu_id, create_date, deadline)
+             values(#{title},#{content},#{clazz.classId},#{student.stuId},now(),#{deadline})
+        </insert>
+
+        <!--查询所有公告(按照时间，近期发布的在前面)-->
+        <select id="queryProclamations" resultMap="BaseResultMap">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id order by create_date desc
+        </select>
+
+         <!--查询所有的过期的公告-->
+         <select id="queryProclamationsExpire" resultMap="BaseResultMap">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id
+            and p.deadline <![CDATA[>]]> now()  order by create_date desc
+        </select>
+
+         <!--查询所有的未过期的公告-->
+        <select id="queryProclamationsWithOutExpire" resultMap="BaseResultMap">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id
+            and p.deadline <![CDATA[<]]> now()  order by create_date desc
+        </select>
+
+         <!--查询班级的公告-->
+         <select id="queryProclamationsByClassId" resultMap="BaseResultMap" parameterType="Integer">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id
+            and c.class_id = #{classId} order by create_date desc
+        </select>
+
+        <!--查询班级所有的过期的公告-->
+        <select id="queryProclamationsByClassIdExpire" resultMap="BaseResultMap" parameterType="Integer">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id
+            and c.class_id = #{classId} and p.deadline <![CDATA[>]]> now()  order by create_date desc
+        </select>
+
+         <!--查询班级所有的未过期的公告-->
+        <select id="queryProclamationsByClassIdWithOutExpire" resultMap="BaseResultMap" parameterType="Integer">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id
+            and c.class_id = #{classId} and p.deadline <![CDATA[<]]> now()  order by create_date desc
+        </select>
+        <!--根据id查询公告-->
+        <select id="queryProclamationById" resultMap="BaseResultMap" parameterType="Integer">
+             select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+            from proclamation p,class c,student s  where p.class_id = c.class_id and p.stu_id = s.stu_id and  p.p_id = #{pId} order by create_date desc
+        </select>
+        <!--获取该学生未确认的且未过期班级公告数-->
+        <select id="countProclamationWithOutReadByStuIdAndClassId" parameterType="com.zyb.entity.Student" resultType="Integer">
+            select count(*) from proclamation p where p.class_id = #{classInfo.classId} and p.deadline  <![CDATA[>]]> now() and p.p_id not in
+            (select pr.p_id from proclamation_record pr where pr.stu_id = #{stuId})
+        </select>
+        <!--获取该学生未确认的且未过期的班级公告-->
+        <select id="queryProclamationWithOutReadByStuIdAndClassId" parameterType="com.zyb.entity.Student" resultMap="BaseResultMap">
+            select p.p_id,p.title,p.content,p.create_date,p.deadline,c.class_id,c.class_name,c.stu_nums,s.stu_id,s.stu_name
+             from proclamation p ,class c,student s where p.class_id = #{classInfo.classId} and p.deadline  <![CDATA[>]]> now() and p.p_id not in
+            (select pr.p_id from proclamation_record pr where pr.stu_id = #{stuId})
+        </select>
+
+		<!--获取该学生班级公告-->
+        <select id="selectShowByStuIdAndpId" parameterType="com.zyb.entity.Proclamation" resultType="String">
+            select showed
+            from proclamation_record where stu_id = #{student.stuId} and p_id = #{pId}
+        </select>
+        <!--根据公告id更新班级公告-->
+        <update id="updateProclamationSelective" parameterType="com.zyb.entity.Proclamation">
+            update proclamation
+            <set>
+                <if test="title !=null">
+                    title = #{title},
+                </if>
+                <if test="content != null">
+                    content = #{content},
+                </if>
+                <if test="deadline != null">
+                    deadline = #{deadline},
+                </if>
+            </set>
+            where p_id = #{pId}
+        </update>
+        <!--根据id删除公告-->
+        <delete id="deleteProclamationById" parameterType="Integer">
+            delete from proclamation where p_id = #{pId}
+        </delete>
+        <!--根据ids删除多个公告-->
+        <delete id="deleteProclamationBatch" parameterType="list">
+            delete from proclamation where p_id in
+            <foreach collection="list" open="(" close=")" separator="," item="pId">
+                #{pId}
+            </foreach>
+        </delete>
+
+
+</mapper>

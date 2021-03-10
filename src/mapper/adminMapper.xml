@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.AdminMapper">
+
+    <!--根据账号查管理员信息-->
+    <select id="queryAdminByAno" parameterType="String" resultType="com.zyb.entity.Admin" >
+        select * from admin where admin_no = #{adminNo}
+   </select>
+
+
+    <!--查询账号是否存在-->
+    <select id="countByAdminNo" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from admin where admin_No = #{adminNo}
+  </select>
+
+    <!--查询姓名是否存在-->
+    <select id="countByAdminName" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from admin where admin_Name = #{adminName}
+  </select>
+    <!--查询密码是否正确-->
+    <select id="countByAdminIdAndPwd" parameterType="com.zyb.entity.Admin" resultType="java.lang.Integer">
+    select count(*) from admin where admin_Id = #{adminId} and admin_Pwd = #{adminPwd}
+  </select>
+
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.zyb.entity.Admin">
+        update admin
+        <set>
+            <if test="adminNo != null" >
+                admin_no = #{adminNo,jdbcType=INTEGER},
+            </if>
+            <if test="adminName != null" >
+                admin_name = #{adminName,jdbcType=VARCHAR},
+            </if>
+            <if test="adminImage != null" >
+                admin_image = #{adminImage,jdbcType=VARCHAR},
+            </if>
+            <if test="adminPwd != null" >
+                admin_pwd = #{adminPwd,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where admin_id = #{adminId}
+    </update>
+
+    <insert id="addAdmin" parameterType="com.zyb.entity.Admin">
+        insert into admin(admin_no,admin_pwd,admin_name,admin_image) values(#{adminNo},#{adminPwd},#{adminName},#{adminImage})
+    </insert>
+    
+    <!--新添加的-->
+    
+    <select id="findAdminRoles" parameterType="Integer" resultType="String">
+        select r.role_name from admin_role a,role r where a.admin_id = #{adminId} and r.role_id = a.role_id
+    </select>
+    
+    <select id="findAdminPerms" parameterType="Integer" resultType="String">
+        select p.perm_name from admin_role a,role_perm r,perm p where a.admin_id = #{adminId} and a.role_id = r.role_id and r.perm_id = p.perm_id
+    </select>
+</mapper>

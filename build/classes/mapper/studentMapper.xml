@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zyb.dao.StudentMapper" >
+
+  <resultMap id="BaseResultMap" type="com.zyb.entity.Student" >
+    <id column="stu_id" property="stuId" jdbcType="INTEGER" />
+    <result column="stu_no" property="stuNo" jdbcType="VARCHAR" />
+    <result column="stu_name" property="stuName" jdbcType="VARCHAR" />
+    <result column="gender" property="gender" jdbcType="CHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="stu_phone" property="stuPhone" jdbcType="VARCHAR" />
+    <result column="graduated" property="graduated" jdbcType="VARCHAR"/>
+    <result column="stu_pwd" property="stuPwd" jdbcType="VARCHAR"/>
+    <result column="stu_image" property="stuImage" jdbcType="VARCHAR"/>
+    <result column="ismain" property="isMain" jdbcType="VARCHAR"/>
+  </resultMap>
+  <!--指定联合-查询出班级字段的封装-->
+  <resultMap id="WithClassResultMap" type="com.zyb.entity.Student" >
+    <id column="stu_id" property="stuId" jdbcType="INTEGER" />
+    <result column="stu_no" property="stuNo" jdbcType="VARCHAR" />
+    <result column="stu_name" property="stuName" jdbcType="VARCHAR" />
+    <result column="gender" property="gender" jdbcType="CHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="stu_phone" property="stuPhone" jdbcType="VARCHAR" />
+    <result column="graduated" property="graduated" jdbcType="VARCHAR"/>
+    <result column="stu_pwd" property="stuPwd" jdbcType="VARCHAR"/>
+    <result column="stu_image" property="stuImage" jdbcType="VARCHAR"/>
+    <result column="ismain" property="isMain" jdbcType="VARCHAR"/>
+    <association property="classInfo" javaType="com.zyb.entity.Class">
+      <id column="class_id" property="classId"/>
+      <result column="class_name" property="className"/>
+      <result column="stu_nums" property="stuNums"/>
+      <result column="class_no" property="classNo"/>
+    </association>
+  </resultMap>
+
+
+
+  <!--查询全部学生带班级信息-->
+  <select id="queryStudentsWithClass" resultMap="WithClassResultMap" >
+    select
+    s.*, c.*
+    from student s left join class c on s.class_id = c.class_id  order by c.class_name,s.stu_no
+  </select>
+
+  <!--根据主键查询学生带班级信息-->
+  <select id="queryByPrimaryKeyWithClass" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+        s.*, c.*
+         from student s left join class c on s.class_id = c.class_id
+        where s.stu_id = #{stuId}
+  </select>
+	<!--根据stuId查询学生信息-->
+  <select id="getStudentById" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select * from student where stu_id = #{stuId}
+  </select>
+
+
+  <!--根据学号查询学生带班级信息-->
+  <select id="queryStudentBySNo" parameterType="java.lang.String" resultMap="WithClassResultMap">
+        select
+        s.*, c.*
+         from student s , class c where s.class_id = c.class_id
+        and s.stu_no = #{stuNo}
+  </select>
+
+  <!--查询密码是否正确-->
+  <select id="countByStuIdAndPwd" parameterType="com.zyb.entity.Student" resultType="java.lang.Integer">
+      select count(*) from student where stu_id = #{stuId} and stu_pwd = #{stuPwd}
+  </select>
+
+
+  <!--查询学号为stuno的学生是否存在-->
+  <select id="countByStuNo" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from student where stu_No = #{stuNo}
+  </select>
+
+  <!--根据班级号查询班级的学生-->
+  <select id="queryStudentsByClassId" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+         s.*,c.*
+         from student s left join class c on s.class_id = c.class_id
+        where c.class_id = #{classId}  order by s.stu_no
+  </select>
+
+  <!--根据教师id查询授课的学生-->
+  <select id="queryStudentsByTId" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+         s.*,c.*
+         from student s ,class c,course_record cr
+        where s.class_id = c.class_id and cr.class_id = c.class_id and cr.t_id = #{tId} order by s.stu_no
+  </select>
+
+  <!--根据班主任id查询管理班级的学生-->
+  <select id="queryStudentsByMainTId" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+         s.*,c.*
+         from student s ,class c,teacher_class tc
+        where s.class_id = c.class_id and tc.class_id = c.class_id and tc.t_id = #{tId} order by s.stu_no
+  </select>
+
+
+  <!--查询所有毕业的学生-->
+  <select id="queryStudentsGraduated" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+     select
+         s.*,c.*
+         from student s left join class c on s.class_id = c.class_id
+        where s.graduated = 'Y'  order by s.stu_no
+  </select>
+  <!--查询所有在读的学生-->
+  <select id="queryStudentsWithOutGraduated" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+     select
+         s.*,c.*
+         from student s left join class c on s.class_id = c.class_id
+        where s.graduated = 'N'  order by s.stu_no
+  </select>
+
+  <!--模糊查询某个班级的学生-->
+  <select id="likeQueryStudentsByClassId" parameterType="com.zyb.entity.Student" resultMap="WithClassResultMap">
+    select
+    s.*,c.*
+    from student s , class c
+    <where>
+      <if test="stuNo != null">
+        and stu_no like concat('%',#{stuNo},'%')
+      </if>
+      <if test="stuName != null">
+        and stu_name like concat('%',#{stuName},'%')
+      </if>
+      <if test="gender != null">
+        and gender like concat('%',#{gender},'%')
+      </if>
+      <if test="email != null">
+        and email like concat('%',#{email},'%')
+      </if>
+      <if test="stuPhone != null">
+        and stu_phone like concat('%',#{stuPhone},'%')
+      </if>
+      <if test="classInfo.className != null">
+        and c.class_name like concat('%',#{classInfo.className},'%')
+      </if>
+      <if test="classInfo.classId != null">
+        and c.class_id = #{classInfo.classId}
+      </if>
+    </where>
+    and s.class_id = c .class_id
+
+  </select>
+  <!--模糊查询教师授课的学生-->
+  <select id="likeQueryStudentsByTId"  resultMap="WithClassResultMap">
+    select
+    s.*,c.*
+    from student s , class c,teacher_class tc
+    <where>
+      <if test="stu.stuNo != null">
+        and stu_no like concat('%',#{stu.stuNo},'%')
+      </if>
+      <if test="stu.stuName != null">
+        and stu_name like concat('%',#{stu.stuName},'%')
+      </if>
+      <if test="stu.gender != null">
+        and gender like concat('%',#{stu.gender},'%')
+      </if>
+      <if test="stu.email != null">
+        and email like concat('%',#{stu.email},'%')
+      </if>
+      <if test="stu.stuPhone != null">
+        and stu_phone like concat('%',#{stu.stuPhone},'%')
+      </if>
+      <if test="classInfo !=null">
+        <if test="classInfo.className != null">
+          and c.class_name like concat('%',#{classInfo.className},'%')
+        </if>
+      </if>
+      <if test="tId != null">
+        and tc.t_id = #{tId}
+      </if>
+    </where>
+    and c.class_id = tc.class_id and s.class_id = c.class_id
+
+  </select>
+
+  <!--模糊查询所有学生-->
+  <select id="likeQueryStudents" parameterType="com.zyb.entity.Student" resultMap="WithClassResultMap">
+    select
+    s.*,c.*
+    from student s , class c
+    <where>
+      <if test="stuNo != null">
+        and stu_no like concat('%',#{stuNo},'%')
+      </if>
+      <if test="stuName != null">
+        and stu_name like concat('%',#{stuName},'%')
+      </if>
+      <if test="gender != null">
+        and gender like concat('%',#{gender},'%')
+      </if>
+      <if test="email != null">
+        and email like concat('%',#{email},'%')
+      </if>
+      <if test="stuPhone != null">
+        and stu_phone like concat('%',#{stuPhone},'%')
+      </if>
+      <if test="classInfo !=null">
+        <if test="classInfo.className != null">
+          and c.class_name like concat('%',#{classInfo.className},'%')
+        </if>
+      </if>
+    </where>
+    and s.class_id = c.class_id
+  </select>
+
+
+  <!--模糊查询所有毕业学生-->
+  <select id="likeQueryStudentsGraduated" parameterType="com.zyb.entity.Student" resultMap="WithClassResultMap">
+    select
+    s.*,c.*
+    from student s , class c
+    <where>
+      <if test="stuNo != null">
+        and stu_no like concat('%',#{stuNo},'%')
+      </if>
+      <if test="stuName != null">
+        and stu_name like concat('%',#{stuName},'%')
+      </if>
+      <if test="gender != null">
+        and gender like concat('%',#{gender},'%')
+      </if>
+      <if test="email != null">
+        and email like concat('%',#{email},'%')
+      </if>
+      <if test="stuPhone != null">
+        and stu_phone like concat('%',#{stuPhone},'%')
+      </if>
+      <if test="classInfo !=null">
+        <if test="classInfo.className != null">
+          and c.class_name like concat('%',#{classInfo.className},'%')
+        </if>
+      </if>
+      <if test="graduated != null">
+        and s.graduated= #{graduated}
+      </if>
+    </where>
+    and s.class_id = c.class_id
+  </select>
+
+
+  <!--模糊查询所有在读学生-->
+  <select id="likeQueryStudentsWithOutGraduated" parameterType="com.zyb.entity.Student" resultMap="WithClassResultMap">
+    select
+    s.*,c.*
+    from student s , class c
+    <where>
+      <if test="stuNo != null">
+        and stu_no like concat('%',#{stuNo},'%')
+      </if>
+      <if test="stuName != null">
+        and stu_name like concat('%',#{stuName},'%')
+      </if>
+      <if test="gender != null">
+        and gender like concat('%',#{gender},'%')
+      </if>
+      <if test="email != null">
+        and email like concat('%',#{email},'%')
+      </if>
+      <if test="stuPhone != null">
+        and stu_phone like concat('%',#{stuPhone},'%')
+      </if>
+      <if test="classInfo !=null">
+        <if test="classInfo.className != null">
+          and c.class_name like concat('%',#{classInfo.className},'%')
+        </if>
+      </if>
+      <if test="graduated != null">
+        and s.graduated= #{graduated}
+      </if>
+    </where>
+    and s.class_id = c.class_id
+  </select>
+
+
+  <!--===============================删除==================================================================================================-->
+  <!--根据主键删除学生-->
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from student where stu_id = #{stuId,jdbcType=INTEGER};
+
+
+  </delete>
+  <!--批量删除学生-->
+  <delete id="deleteBatch" parameterType="list">
+        delete from student
+        <where>
+            <if test="list!=null and list.size>0">
+                <foreach collection="list" open="stu_no in (" close=")" item="stuNo" separator=",">
+                    #{stuNo}
+                </foreach>
+            </if>
+        </where>
+  </delete>
+  <!--根据班级号删除班级的学生-->
+  <delete id="deleteByClassId" parameterType="java.lang.Integer" >
+     delete from student where class_id = #{classId,jdbcType=INTEGER};
+  </delete>
+  <!--根据班级号批量删除多个班级的学生-->
+  <delete id="deleteBatchByClassIds" parameterType="list">
+    delete  from student where class_id in
+    <foreach collection="list" open="(" close=")" separator="," item="classId">
+      #{classId}
+    </foreach>
+  </delete>
+  <!--===============================添加==================================================================================================-->
+
+<!--添加学生-->
+  <insert id="addStudent" parameterType="com.zyb.entity.Student" >
+    insert into student (stu_no, stu_name, gender,email,stu_phone, class_id,graduated,stu_pwd,stu_image)
+    values (#{stuNo}, #{stuName}, #{gender}, #{email}, #{stuPhone},#{classInfo.classId},'N','00000000','default.jpg')
+  </insert>
+
+<!--选择属性 添加学生-->
+  <insert id="addStudentSelective" parameterType="com.zyb.entity.Student">
+    insert into student
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="stuNo != null" >
+        stu_no,
+      </if>
+      <if test="stuName != null" >
+        stu_name,
+      </if>
+      <if test="gender != null" >
+        gender,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="stuPhone != null">
+        stu_phone,
+      </if>
+      <if test="classInfo.classId != null" >
+        class_id,
+      </if>
+        graduated,
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="stuNo != null" >
+        #{stuNo},
+      </if>
+      <if test="stuName != null" >
+        #{stuName},
+      </if>
+      <if test="gender != null" >
+        #{gender},
+      </if>
+      <if test="email != null" >
+        #{email},
+      </if>
+      <if test="stuPhone != null">
+        #{stuPhone},
+      </if>
+      <if test="classInfo.classId != null" >
+        #{classInfo.classId},
+      </if>
+      'N',
+    </trim>
+  </insert>
+  <!--===============================更新==================================================================================================-->
+  <update id="updateByPrimaryKeySelective" parameterType="com.zyb.entity.Student" >
+    update student
+    <set>
+      <if test="stuNo != null" >
+        stu_no = #{stuNo,jdbcType=VARCHAR},
+      </if>
+      <if test="stuName != null" >
+        stu_name = #{stuName,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null" >
+        gender = #{gender,jdbcType=CHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="stuPhone != null">
+        stu_phone = #{stuPhone,jdbcType=VARCHAR},
+      </if>
+      <if test="graduated != null">
+        graduated = #{graduated,jdbcType=VARCHAR},
+      </if>
+      <if test="stuPwd != null">
+        stu_pwd = #{stuPwd,jdbcType=VARCHAR},
+      </if>
+      <if test="classInfo.classId != null" >
+        class_id = #{classInfo.classId,jdbcType=INTEGER},
+      </if>
+      <if test="isMain != null" >
+        ismain = #{isMain,jdbcType=INTEGER},
+      </if>
+    </set>
+    where stu_id = #{stuId,jdbcType=INTEGER}
+  </update>
+
+  <!--批量使学生毕业-->
+  <update id="updateStudentsGraduatedBySNos" parameterType="list">
+    update student set graduated ='Y' where stu_no in
+    <foreach collection="list" open="(" close=")" separator="," item="stuNo">
+      #{stuNo}
+    </foreach>
+  </update>
+  <!--批量使学生恢复在读-->
+  <update id="updateStudentsStudyingBySNos" parameterType="list">
+    update student set graduated ='N' where stu_no in
+    <foreach collection="list" open="(" close=")" separator="," item="stuNo">
+      #{stuNo}
+    </foreach>
+  </update>
+
+  <!--通过班级编号单个学生毕业-->
+  <update id="updateStudentsGraduatedByClassId" parameterType="Integer">
+    update student set graduated ='Y' where class_id = #{classId}
+  </update>
+
+  <!--通过班级号使多个学生毕业-->
+  <update id="updateStudentsGraduatedByClassIds" parameterType="list">
+    update student set graduated ='Y' where class_id =
+    <foreach collection="list" open="(" close=")" separator="," item="classId">
+      #{classId}
+    </foreach>
+  </update>
+
+
+  <select id="findStudentRoles" parameterType="Integer" resultType="String">
+        select r.role_name from stu_role sr,role r where sr.stu_id = #{stuId} and r.role_id = sr.role_id
+    </select>
+
+  <select id="findStudentPerms" parameterType="Integer" resultType="String">
+        select p.perm_name from stu_role sr,role_perm r,perm p where sr.stu_id = #{stuId} and sr.role_id = r.role_id and r.perm_id = p.perm_id
+    </select>
+
+  <!--添加普通学生角色-->
+  <insert id="addStudentRole" parameterType="Integer">
+        insert into stu_role(stu_id, role_id) value(#{stuId},6)
+    </insert>
+  <!--添加班干部角色-->
+  <insert id="addClassLeaderRole" parameterType="Integer">
+        insert into stu_role(stu_id, role_id) value(#{stuId},5)
+    </insert>
+  <!--删除学生的角色-->
+  <delete id="deleteStudentRole" parameterType="Integer">
+        delete from stu_role where stu_id = #{stuId}
+    </delete>
+
+  <!--批量删除学生的角色-->
+  <delete id="deleteStudentRoleBatch">
+    delete from stu_role where stu_id in
+    <foreach collection="list" open="(" close=")" separator="," item="stuId">
+      #{stuId}
+    </foreach>
+  </delete>
+
+  <!--根据班级号查询班级的班干部-->
+  <select id="queryClassLeaderByClassId" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+         s.*,c.*
+         from student s left join class c on s.class_id = c.class_id
+        where c.class_id = #{classId} and s.ismain = 'Y' order by s.stu_no
+  </select>
+
+  <!--根据班级号查询班级的不是班干部的学生-->
+  <select id="queryNotClassLeaderByClassId" parameterType="java.lang.Integer" resultMap="WithClassResultMap">
+        select
+         s.*,c.*
+         from student s left join class c on s.class_id = c.class_id
+        where c.class_id = #{classId} and s.ismain = 'N' order by s.stu_no
+  </select>
+
+  <!--设置多个学生为班干部-->
+  <update id="updateStudentToClassLeaderByIds" parameterType="list">
+    update student set ismain ='Y' where stu_id in
+    <foreach collection="list" open="(" close=")" separator="," item="stuId">
+      #{stuId}
+    </foreach>
+  </update>
+
+  <!--设置多个学生为普通学生-->
+  <update id="updateClassLeaderToStudentByNos" parameterType="list">
+    update student set ismain ='N' where stu_no in
+    <foreach collection="list" open="(" close=")" separator="," item="stuNo">
+      #{stuNo}
+    </foreach>
+  </update>
+
+
+</mapper>

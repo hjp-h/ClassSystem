@@ -1,0 +1,164 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zyb.dao.TeacherMapper">
+
+    <select id="queryTeacherById" parameterType="Integer" resultMap="WithCourseResultMap">
+        select distinct t.*,c.course_id,c.course_name  from teacher t,course_record cr,course c where
+        t.t_id = cr.t_id and cr.course_id = c.course_id and t.t_id = #{tId}
+    </select>
+
+    <!--所有老师-->
+    <select  id="queryTeachers" resultMap="WithCourseResultMap">
+        select distinct t.*,c.course_id,c.course_name  from teacher t,course_record cr,course c where
+        t.t_id = cr.t_id and cr.course_id = c.course_id
+    </select>
+    <!--在职老师-->
+    <select  id="queryTeachersInService" resultMap="WithCourseResultMap">
+        select distinct t.*,c.course_id,c.course_name  from teacher t,course_record cr,course c where
+        t.t_id = cr.t_id and cr.course_id = c.course_id and t.inservice = 'Y'
+    </select>
+    <!--离职老师-->
+    <select  id="queryTeachersQuit" resultMap="WithCourseResultMap">
+        select distinct t.*,c.course_id,c.course_name  from teacher t,course_record cr,course c where
+        t.t_id = cr.t_id and cr.course_id = c.course_id and t.inservice = 'N'
+    </select>
+
+    <resultMap id="WithCourseResultMap" type="com.zyb.entity.Teacher" >
+        <id column="t_id" property="tId" jdbcType="INTEGER" />
+        <result column="t_no" property="tNo" jdbcType="VARCHAR" />
+        <result column="t_name" property="tName" jdbcType="VARCHAR" />
+        <result column="gender" property="gender" jdbcType="CHAR" />
+        <result column="email" property="email" jdbcType="VARCHAR" />
+        <result column="t_phone" property="tPhone" jdbcType="VARCHAR" />
+        <result column="inservice" property="inService" jdbcType="VARCHAR"/>
+        <result column="ismain" property="isMain" jdbcType="VARCHAR"/>
+        <association property="course" javaType="com.zyb.entity.Course">
+            <id column="course_id" property="courseId"/>
+            <result column="course_name" property="courseName"/>
+        </association>
+    </resultMap>
+
+    <!--根据账号查教师信息-->
+    <select id="queryTeacherByTno" parameterType="String" resultType="com.zyb.entity.Teacher" >
+        select * from teacher where t_no = #{tNo}
+   </select>
+
+
+    <!--查询账号是否存在-->
+    <select id="countByTeacherNo" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from teacher where t_no = #{tNo}
+  </select>
+
+    <!--查询姓名是否存在-->
+    <select id="countByTeacherName" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from teacher where t_name = #{tName}
+  </select>
+    <!--查询密码是否正确-->
+    <select id="countByTeacherIdAndPwd" parameterType="com.zyb.entity.Teacher" resultType="java.lang.Integer">
+    select count(*) from teacher where t_id = #{tId} and t_pwd = #{tPwd}
+  </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.zyb.entity.Teacher">
+        update teacher
+        <set>
+            <if test="tNo != null" >
+                t_no = #{tNo,jdbcType=INTEGER},
+            </if>
+            <if test="tName != null" >
+                t_name = #{tName,jdbcType=VARCHAR},
+            </if>
+            <if test="tImage != null" >
+                t_image = #{tImage,jdbcType=VARCHAR},
+            </if>
+            <if test="tPwd != null" >
+                t_pwd = #{tPwd,jdbcType=VARCHAR},
+            </if>
+            <if test="gender!=null">
+                gender = #{gender,jdbcType=VARCHAR},
+            </if>
+            <if test="email!=null">
+                email = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="tPhone!=null">
+                t_phone = #{tPhone,jdbcType=VARCHAR},
+            </if>
+            <if test="inService!=null">
+                inservice = #{inService,jdbcType=VARCHAR},
+            </if>
+            <if test="isMain != null">
+                ismain = #{isMain,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where t_id = #{tId}
+    </update>
+
+    <update id="updateTeacherQuitByIds">
+        update teacher set inservice= 'N' where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </update>
+    <update id="updateTeacherInByIds">
+        update teacher set inservice= 'Y' where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </update>
+
+
+    <!--增加教师-->
+    <insert id="addTeacher" parameterType="com.zyb.entity.Teacher" useGeneratedKeys="true" keyProperty="tId">
+        insert into teacher(t_no,t_pwd,t_name,t_image,t_phone,email,gender,inservice,ismain) values(#{tNo},'00000000',#{tName},#{tImage},#{tPhone},#{email},#{gender},'Y',#{isMain})
+    </insert>
+
+    <!--删除教师-->
+    <delete id="deleteTeacherById" parameterType="Integer" >
+        delete  from teacher where t_id = #{tId}
+    </delete>
+    <!--批量删除老师-->
+    <delete id="deleteBatch">
+        delete from teacher where t_no in
+        <foreach collection="list" open="(" close=")" item="tId" separator="," >
+            #{tId}
+        </foreach>
+    </delete>
+
+    <!--设置老师离职-->
+    <update id="updateTeacherQuitById" parameterType="Integer">
+        update teacher set inservice = 'N' where t_id = #{tId}
+    </update>
+
+    <!--新添加的-->
+
+    <select id="findTeacherRoles" parameterType="Integer" resultType="String">
+        select r.role_name from teacher_role t,role r where t.t_id = #{tId} and r.role_id = t.role_id
+    </select>
+
+    <select id="findTeacherPerms" parameterType="Integer" resultType="String">
+        select p.perm_name from teacher_role t,role_perm r,perm p where t.t_id = #{tId} and t.role_id = r.role_id and r.perm_id = p.perm_id
+    </select>
+
+    <!--添加普通教师角色-->
+    <insert id="addTeacherRole" parameterType="Integer">
+        insert into teacher_role(t_id, role_id) value(#{tId},4)
+    </insert>
+    <!--添加班主任角色-->
+    <insert id="addMainTeacherRole" parameterType="Integer">
+        insert into teacher_role(t_id, role_id) value(#{tId},3)
+    </insert>
+    <!--删除教师的角色-->
+    <delete id="deleteTeacherRole" parameterType="Integer">
+        delete from teacher_role where t_id = #{tId}
+    </delete>
+
+    <!--批量删除教师的角色-->
+    <delete id="deleteTeacherRoleBatch">
+        delete from teacher_role where t_id in
+        <foreach collection="list" open="(" close=")" separator="," item="tId">
+            #{tId}
+        </foreach>
+    </delete>
+
+
+</mapper>
